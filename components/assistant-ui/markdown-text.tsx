@@ -14,6 +14,8 @@ import { CheckIcon, CopyIcon } from "lucide-react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
+import { isIntentJson } from "@/hooks/isIntent";
+import { IntentCard } from "../ui/intentcard";
 
 const MarkdownTextImpl = () => {
   return (
@@ -83,9 +85,9 @@ const defaultComponents = memoizeMarkdownComponents({
   h6: ({ className, ...props }) => (
     <h6 className={cn("my-4 font-semibold first:mt-0 last:mb-0", className)} {...props} />
   ),
-  p: ({ className, ...props }) => (
-    <p className={cn("mb-5 mt-5 leading-7 first:mt-0 last:mb-0", className)} {...props} />
-  ),
+  // p: ({ className, ...props }) => (
+  //   <p className={cn("mb-5 mt-5 leading-7 first:mt-0 last:mb-0", className)} {...props} />
+  // ),
   a: ({ className, ...props }) => (
     <a className={cn("text-primary font-medium underline underline-offset-4", className)} {...props} />
   ),
@@ -119,6 +121,33 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre className={cn("overflow-x-auto rounded-b-lg bg-black p-4 text-white", className)} {...props} />
   ),
+  p: ({ className, children, ...props }) => {
+  let text = "";
+
+  if (Array.isArray(children)) {
+    text = children.map(child => typeof child === "string" ? child : "").join("").trim();
+  } else if (typeof children === "string") {
+    text = children.trim();
+  } else if (typeof children === "object" && "props" in children) {
+    text = String(children.props.children).trim();
+  }
+  console.log("text", text)
+  if (isIntentJson(text)) {
+    try {
+      const json = JSON.parse(text);
+      return <IntentCard intent={json} />;
+    } catch {
+      // fallback
+    }
+  }
+
+  return (
+  <p className={cn("mb-5 mt-5 leading-7 first:mt-0 last:mb-0", className)} {...props}>
+    {children}
+  </p>
+);
+},
+
   code: function Code({ className, ...props }) {
     const isCodeBlock = useIsMarkdownCodeBlock();
     return (
